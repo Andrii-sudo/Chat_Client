@@ -12,3 +12,8 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+void MainWindow::setName(std::string strName)
+{
+    ui->labName->setText(QString::fromStdString(strName));
+}

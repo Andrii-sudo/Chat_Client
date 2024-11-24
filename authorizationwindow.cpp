@@ -22,6 +22,8 @@ AuthorizationWindow::AuthorizationWindow(MainWindow* pMainWin, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::AuthorizationWindow)
 {
+    m_pMainWin = pMainWin;
+
     ui->setupUi(this);
 
     // Створюємо регулярний вираз, який забороняє пробіли
@@ -97,6 +99,12 @@ SOCKET AuthorizationWindow::connectToServer(const std::string& strIp, const std:
 
 void AuthorizationWindow::on_btnLogin_clicked()
 {
+    if(ui->txtName->text().isEmpty() || ui->txtPassword->text().isEmpty())
+    {
+        QMessageBox::information(this, "Input Error", "Both username and password fields must be filled.");
+        return;
+    }
+
     SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
     if (socket == INVALID_SOCKET)
     {
@@ -138,6 +146,11 @@ void AuthorizationWindow::on_btnLogin_clicked()
             {
                 QMessageBox::information(this, "Success", "Account created successfully!");
             }
+
+            this->hide();
+
+            m_pMainWin->setName(strName);
+            m_pMainWin->show();
         }
         else if(vecRecvBuf[0] == 'N')
         {

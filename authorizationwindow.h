@@ -27,6 +27,8 @@ private:
     Ui::AuthorizationWindow *ui;
     bool bIsLogin;
 
+    MainWindow* m_pMainWin;
+
     SOCKET connectToServer(const std::string& strIp, const std::string& strPort);
 };
 

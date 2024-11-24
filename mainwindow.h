@@ -17,7 +17,11 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void setName(std::string strName);
+
 private:
     Ui::MainWindow *ui;
+
+    std::string m_str;
 };
 #endif // MAINWINDOW_H
