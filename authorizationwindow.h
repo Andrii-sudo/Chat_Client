@@ -4,8 +4,6 @@
 #include <QDialog>
 #include "mainwindow.h"
 
-#include <windows.h>
-
 namespace Ui {
 class AuthorizationWindow;
 }
@@ -26,6 +24,8 @@ private slots:
 private:
     Ui::AuthorizationWindow *ui;
     bool bIsLogin;
+
+    MainWindow* m_pMainWin;
 
     SOCKET connectToServer(const std::string& strIp, const std::string& strPort);
 };

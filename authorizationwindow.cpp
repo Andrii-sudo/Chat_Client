@@ -13,15 +13,16 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 #include <QMessageBox>
+#include <QRegularExpressionValidator>
 
 #define DEFAULT_PORT "12345"
-
-#include <QRegularExpressionValidator>
 
 AuthorizationWindow::AuthorizationWindow(MainWindow* pMainWin, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::AuthorizationWindow)
 {
+    m_pMainWin = pMainWin;
+
     ui->setupUi(this);
 
     // Створюємо регулярний вираз, який забороняє пробіли
@@ -97,6 +98,12 @@ SOCKET AuthorizationWindow::connectToServer(const std::string& strIp, const std:
 
 void AuthorizationWindow::on_btnLogin_clicked()
 {
+    if(ui->txtName->text().isEmpty() || ui->txtPassword->text().isEmpty())
+    {
+        QMessageBox::information(this, "Input Error", "Both username and password fields must be filled.");
+        return;
+    }
+
     SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
     if (socket == INVALID_SOCKET)
     {
@@ -111,7 +118,6 @@ void AuthorizationWindow::on_btnLogin_clicked()
 
     int iResult;
 
-    // Send an initial buffer
     iResult = send(socket, strInfo.c_str(), strInfo.length(), 0);
     if (iResult == SOCKET_ERROR)
     {
@@ -120,8 +126,8 @@ void AuthorizationWindow::on_btnLogin_clicked()
         return;
     }
 
-    const int recvbuflen = 20;
-    std::vector<char> vecRecvBuf(20);
+    const int RECVBUF_SIZE = 20;
+    std::vector<char> vecRecvBuf(RECVBUF_SIZE);
 
     // Receive data until the server closes the connection
 
@@ -138,6 +144,11 @@ void AuthorizationWindow::on_btnLogin_clicked()
             {
                 QMessageBox::information(this, "Success", "Account created successfully!");
             }
+
+            this->hide();
+
+            m_pMainWin->setName(strName);
+            m_pMainWin->show();
         }
         else if(vecRecvBuf[0] == 'N')
         {
