@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include <windows.h>
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -19,9 +21,14 @@ public:
 
     void setName(std::string strName);
 
+private slots:
+    void on_btnSearch_clicked();
+
 private:
     Ui::MainWindow *ui;
 
     std::string m_str;
+
+    SOCKET connectToServer(const std::string& strIp, const std::string& strPort);
 };
 #endif // MAINWINDOW_H

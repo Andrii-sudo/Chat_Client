@@ -13,10 +13,9 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 #include <QMessageBox>
+#include <QRegularExpressionValidator>
 
 #define DEFAULT_PORT "12345"
-
-#include <QRegularExpressionValidator>
 
 AuthorizationWindow::AuthorizationWindow(MainWindow* pMainWin, QWidget *parent)
     : QDialog(parent)
@@ -119,7 +118,6 @@ void AuthorizationWindow::on_btnLogin_clicked()
 
     int iResult;
 
-    // Send an initial buffer
     iResult = send(socket, strInfo.c_str(), strInfo.length(), 0);
     if (iResult == SOCKET_ERROR)
     {
@@ -128,8 +126,8 @@ void AuthorizationWindow::on_btnLogin_clicked()
         return;
     }
 
-    const int recvbuflen = 20;
-    std::vector<char> vecRecvBuf(20);
+    const int RECVBUF_SIZE = 20;
+    std::vector<char> vecRecvBuf(RECVBUF_SIZE);
 
     // Receive data until the server closes the connection
 

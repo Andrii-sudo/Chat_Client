@@ -4,8 +4,6 @@
 #include <QDialog>
 #include "mainwindow.h"
 
-#include <windows.h>
-
 namespace Ui {
 class AuthorizationWindow;
 }
