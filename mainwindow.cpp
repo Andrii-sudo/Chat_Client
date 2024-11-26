@@ -143,3 +143,8 @@ void MainWindow::on_btnSearch_clicked()
     closesocket(socket);
 
 }
+
+void MainWindow::on_btnSend_clicked()
+{
+
+}
