@@ -24,10 +24,16 @@ public:
 private slots:
     void on_btnSearch_clicked();
 
+    void on_btnSend_clicked();
+
+    void on_lsChats_clicked(const QModelIndex &index);
+
 private:
     Ui::MainWindow *ui;
 
-    std::string m_str;
+    QString m_strUserName;
+    QString m_strSelectedName;
+    std::unordered_map<QString, QString> m_mapChats;
 
     SOCKET connectToServer(const std::string& strIp, const std::string& strPort);
 };

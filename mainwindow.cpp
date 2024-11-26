@@ -29,6 +29,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Призначаємо валідатор для QLineEdit
     ui->txtSearch->setValidator(validator);
+
+    m_strUserName = "";
 }
 
 MainWindow::~MainWindow()
@@ -38,7 +40,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::setName(std::string strName)
 {
-    ui->labName->setText(QString::fromStdString(strName));
+    m_strUserName = QString::fromStdString(strName);
+    ui->labName->setText(m_strUserName);
 }
 
 SOCKET MainWindow::connectToServer(const std::string& strIp, const std::string& strPort)
@@ -120,6 +123,9 @@ void MainWindow::on_btnSearch_clicked()
             QString strReceivedData = QString::fromStdString(std::string(vecRecvBuf.data(), iResult));
             QStringList foundUsers = strReceivedData.split(' ', Qt::SkipEmptyParts);
 
+            // Видалення користувача зі списку
+            foundUsers.removeAll(m_strUserName);
+
             // Створюємо модель на основі списку знайдених користувачів
             QStringListModel* model = new QStringListModel(foundUsers, this);
 
@@ -141,10 +147,56 @@ void MainWindow::on_btnSearch_clicked()
     }
 
     closesocket(socket);
-
 }
 
 void MainWindow::on_btnSend_clicked()
 {
+    if(ui->txtMessage->text().isEmpty() || m_strSelectedName.isEmpty())
+    {
+        return;
+    }
 
+    SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
+    if (socket == INVALID_SOCKET)
+    {
+        return;
+    }
+
+    std::string strMessage = std::string("mes ") + m_strUserName.toStdString() + " " +  m_strSelectedName.toStdString()
+                                                 + " " + ui->txtMessage->text().toStdString();
+
+    int iResult;
+
+    iResult = send(socket, strMessage.c_str(), strMessage.length(), 0);
+    if (iResult == SOCKET_ERROR)
+    {
+        QMessageBox::critical(this, "Error", "send failed: " + QString::number(WSAGetLastError()));
+        closesocket(socket);
+        return;
+    }
+
+    const int RECVBUF_SIZE = 1;
+    std::vector<char> vecRecvBuf(RECVBUF_SIZE);
+
+    iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
+    if (iResult > 0)
+    {
+        // Завжди приймаємо Y
+    }
+    else if (iResult == 0)
+    {
+        QMessageBox::information(this, "Error", "Connection closed");
+    }
+    else
+    {
+        QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
+    }
+
+    closesocket(socket);
+}
+
+void MainWindow::on_lsChats_clicked(const QModelIndex &index)
+{
+    m_strSelectedName = index.data(Qt::DisplayRole).toString();
+    ui->txtChat->setPlainText(m_mapChats[m_strSelectedName]);
 }
