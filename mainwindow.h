@@ -28,11 +28,16 @@ private slots:
 
     void on_lsChats_clicked(const QModelIndex &index);
 
+    void updateChats();
+    void on_txtSearch_textChanged(const QString &arg1);
+
 private:
     Ui::MainWindow *ui;
 
     QString m_strUserName;
     QString m_strSelectedName;
+
+    std::vector<QString> m_vecChats;
     std::unordered_map<QString, QString> m_mapChats;
 
     SOCKET connectToServer(const std::string& strIp, const std::string& strPort);
