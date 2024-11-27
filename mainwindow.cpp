@@ -265,11 +265,19 @@ void MainWindow::updateChats()
                     chatList.append(m_vecChats[i]);
                 }
 
-                QStringListModel* model = new QStringListModel(chatList, this);
+                QStringListModel* currentModel = qobject_cast<QStringListModel*>(ui->lsChats->model());
+                if (!currentModel || currentModel->stringList() != chatList)
+                {
+                    QStringListModel* model = new QStringListModel(chatList, this);
 
-                ui->lsChats->setModel(model);
+                    ui->lsChats->setModel(model);
+
+                    if (currentModel)
+                    {
+                        currentModel->deleteLater();
+                    }
+                }
             }
-
 
             on_lsChats_clicked(ui->lsChats->currentIndex());
         }
