@@ -17,7 +17,7 @@ public:
     ~AuthorizationWindow();
 
 private slots:
-    void on_btnLogin_clicked();
+    void on_btnSignIn_clicked();
 
     void on_btnSignUp_clicked();
 
