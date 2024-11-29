@@ -96,7 +96,7 @@ SOCKET AuthorizationWindow::connectToServer(const std::string& strIp, const std:
     return ConnectSocket;
 }
 
-void AuthorizationWindow::on_btnLogin_clicked()
+void AuthorizationWindow::on_btnSignIn_clicked()
 {
     if(ui->txtName->text().isEmpty() || ui->txtPassword->text().isEmpty())
     {
@@ -179,14 +179,16 @@ void AuthorizationWindow::on_btnSignUp_clicked()
     if(bIsLogin)
     {
         bIsLogin = false;
-        ui->btnLogin->setText("Create account");
+        ui->labLogin->setText("Create account");
+        ui->btnSignIn->setText("Sign up");
         ui->labHaveAcc->setText("Allready have an account?");
         ui->btnSignUp->setText("Sign in");
     }
     else
     {
         bIsLogin = true;
-        ui->btnLogin->setText("Login");
+        ui->labLogin->setText("Login");
+        ui->btnSignIn->setText("Sign in");
         ui->labHaveAcc->setText("Don't have account?");
         ui->btnSignUp->setText("Sign up");
     }
