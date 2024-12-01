@@ -23,16 +23,15 @@ public:
 
 private slots:
     void on_btnSearch_clicked();
-
     void on_btnSend_clicked();
 
     void on_lsChats_clicked(const QModelIndex &index);
-
-    void updateChats();
     void on_txtSearch_textChanged(const QString &arg1);
 
+    void updateChats(); // Викликається раз в 1.5 секунди
+
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow* ui;
 
     QString m_strUserName;
     QString m_strSelectedName;

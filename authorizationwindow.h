@@ -18,12 +18,13 @@ public:
 
 private slots:
     void on_btnSignIn_clicked();
-
     void on_btnSignUp_clicked();
 
 private:
-    Ui::AuthorizationWindow *ui;
-    bool bIsLogin;
+    Ui::AuthorizationWindow* ui;
+
+    // Змінна, яка визначає чи хоче користувач авторизуватися, чи зареєструватися
+    bool m_bIsLogin;
 
     MainWindow* m_pMainWin;
 
