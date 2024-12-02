@@ -7,101 +7,287 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>513</height>
    </rect>
+  </property>
+  <property name="cursor">
+   <cursorShape>ArrowCursor</cursorShape>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">MainWindow
+ {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 #A8D8A0, stop:1 #A6D8F7);
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="labName">
-    <property name="geometry">
-     <rect>
-      <x>670</x>
-      <y>10</y>
-      <width>81</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>_Name_</string>
-    </property>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>10</y>
-      <width>258</width>
-      <height>231</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLineEdit" name="txtSearch"/>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btnSearch">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset theme="QIcon::ThemeIcon::SystemSearch"/>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QListView" name="lsChats">
-       <property name="editTriggers">
-        <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="">
-    <property name="geometry">
-     <rect>
-      <x>350</x>
-      <y>150</y>
-      <width>401</width>
-      <height>431</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <item>
-      <widget class="QPlainTextEdit" name="txtChat"/>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QLineEdit" name="txtMessage"/>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btnSend">
-         <property name="styleSheet">
-          <string notr="true">QPushButton
+   <layout class="QFormLayout" name="formLayout">
+    <item row="0" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLineEdit" name="txtSearch">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>210</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLineEdit {
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 5px;
+    font-size: 14px;
+    background-color: #ffffff;
+    color: black; /* Основний текст чорний */
+}
+
+QLineEdit:focus {
+    border: 1px solid #005a52;
+}
+</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnSearch">
+          <property name="minimumSize">
+           <size>
+            <width>38</width>
+            <height>29</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>38</width>
+            <height>29</height>
+           </size>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton {
+    background-color: #00A58F;  /* Зелений колір */
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 5px 15px;
+    font-size: 14px;
+    color: white;
+
+}
+
+</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset theme="QIcon::ThemeIcon::SystemSearch"/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QListView" name="lsChats">
+        <property name="maximumSize">
+         <size>
+          <width>256</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="cursor" stdset="0">
+         <cursorShape>ArrowCursor</cursorShape>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QListView {
+    border: 1px solid #b2b2b2;      /* Тонка сіренька обводка */
+    border: 1px solid black;
+    border-radius: 6px;             /* Заокруглені кути */
+    padding: 5px;                   /* Відступи всередині списку */
+    background-color: #ffffff;      /* Білий фон для списку */
+    color: black;                   /* Чорний колір тексту */
+}
+
+QListView::item {
+    padding: 5px;                   /* Відступи для кожного елементу */
+}
+
+QListView::item:selected {
+    background-color: #00A58F;      /* Той самий темно-зелений фон для вибраного 005a52 елемента */
+    color: white;                   /* Білий колір тексту для вибраних елементів */
+}
+
+
+QListView::item:selected {
+    background-color: #4E8B85; /* Темніший зелений для вибраних елементів */
+    color: white;
+}</string>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="1">
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton">
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton
 {
         background-color: transparent;
         border: none;
+        color: #1dc283;
+		font-size: 14px;
 }</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset theme="QIcon::ThemeIcon::DocumentSend"/>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset theme="QIcon::ThemeIcon::UserAvailable"/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labName">
+          <property name="styleSheet">
+           <string notr="true">QLabel {
+    border: 1px solid black;      /* Тонка чорна обводка */
+    border-radius: 0px;           /* Заокруглені кути */
+    padding: 5px;                 /* Відступи всередині */
+    font-size: 14px;              /* Розмір шрифту */
+    background-color: #ffffff;    /* Білий фон */
+    color: black;                 /* Чорний колір тексту */
+}</string>
+          </property>
+          <property name="text">
+           <string>_Name_</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QPlainTextEdit" name="txtChat">
+          <property name="styleSheet">
+           <string notr="true">QPlainTextEdit {
+    border: 1px solid black;      /* Тонка сіренька обводка */
+    border-radius: 6px;             /* Заокруглені кути */
+    padding: 5px;                   /* Відступи всередині поля вводу */
+    background-color: #ffffff;      /* Білий фон для поля */
+    color: black;                   /* Чорний колір тексту */
+}
+
+QPlainTextEdit:focus {
+    border: 1px solid #00A58F;      /* Зелена обводка при фокусі (як для вибраних елементів у списку) */
+}
+
+QPlainTextEdit::plainTextDocument {
+    padding: 5px;                   /* Відступи всередині текстового поля */
+}</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLineEdit" name="txtMessage">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 5px;
+    font-size: 14px;
+    background-color: #ffffff;
+    color: black; /* Основний текст чорний */
+}
+
+QLineEdit:focus {
+    border: 1px solid #005a52;
+}
+</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnSend">
+            <property name="minimumSize">
+             <size>
+              <width>38</width>
+              <height>29</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>38</width>
+              <height>29</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">
+QPushButton {
+    background-color: #1170CE;  /* Зелений колір */
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 5px 15px;
+    font-size: 14px;
+    color: white;
+
+}</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset theme="QIcon::ThemeIcon::DocumentSend"/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>
