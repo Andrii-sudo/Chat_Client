@@ -1,5 +1,6 @@
 #include "authorizationwindow.h"
 #include "ui_authorizationwindow.h"
+#include "selectionwindow.h"
 
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -19,14 +20,14 @@
 
 #define DEFAULT_PORT "12345"
 
-AuthorizationWindow::AuthorizationWindow(MainWindow* pMainWin, QWidget *parent)
+AuthorizationWindow::AuthorizationWindow(SelectionWindow* pSelectionWin, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::AuthorizationWindow)
+    , m_pSelectionWin(pSelectionWin) // Зв'язок із SelectionWindow
 {
     ui->setupUi(this);
 
-    m_pMainWin = pMainWin;
-
+    //m_pMainWin = pMainWin;
     m_bIsLogin = true;
 
     // Заборона введення пробілів у поля авторизації
@@ -40,7 +41,7 @@ AuthorizationWindow::AuthorizationWindow(MainWindow* pMainWin, QWidget *parent)
     WSADATA wsaData;
 
     // Ініціалізація Winsock
-    int	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    int  iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0)
     {
         QMessageBox::critical(this, "Error", "WSAStartup failed: " + QString::number(iResult));
@@ -66,7 +67,7 @@ SOCKET AuthorizationWindow::connectToServer(const std::string& strIp, const std:
     hints.ai_protocol = IPPROTO_TCP; // Протокол: TCP
 
     // Визначення локальної адреси і порту для з'єднанням з сервером
-    int	iResult = getaddrinfo(strIp.c_str(), strPort.c_str(), &hints, &result);
+    int  iResult = getaddrinfo(strIp.c_str(), strPort.c_str(), &hints, &result);
     if (iResult != 0)
     {
         QMessageBox::critical(this, "Error", "getaddrinfo failed: " + QString::number(iResult));
@@ -134,7 +135,6 @@ void AuthorizationWindow::on_btnSignIn_clicked()
 
     const int RECVBUF_SIZE = 1;
     std::vector<char> vecRecvBuf(RECVBUF_SIZE);
-
     // Приймання відповіді від серверу ("Y" або "N")
     iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
     if (iResult > 0)
@@ -153,7 +153,7 @@ void AuthorizationWindow::on_btnSignIn_clicked()
 
             this->hide();
 
-            m_pMainWin->setName(strName);
+           // m_pMainWin->setName(strName);
             m_pMainWin->show();
         }
         else if(vecRecvBuf[0] == 'N')
@@ -199,4 +199,3 @@ void AuthorizationWindow::on_btnSignUp_clicked()
         ui->btnSignUp->setText("Sign up");
     }
 }
-
