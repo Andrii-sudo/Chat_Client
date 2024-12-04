@@ -20,6 +20,7 @@
 #include <QStringListModel>
 
 #define DEFAULT_PORT "12345"
+#define PIPE_NAME L"\\\\.\\pipe\\ServerPipe"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -101,6 +102,27 @@ SOCKET MainWindow::connectToServer(const std::string& strIp, const std::string& 
     return ConnectSocket;
 }
 
+// Підключення до іменованого пайпа
+HANDLE MainWindow::connectToPipe()
+{
+    HANDLE hPipe = CreateFile(
+        PIPE_NAME,            // Ім'я пайпа
+        GENERIC_READ | GENERIC_WRITE, // Режим доступу
+        0,                    // Немає спільного доступу
+        NULL,                 // Атрибути безпеки
+        OPEN_EXISTING,        // Відкрити існуючий пайп
+        0,                    // Атрибути файлу
+        NULL                  // Шаблон файлу
+        );
+
+    if (hPipe == INVALID_HANDLE_VALUE)
+    {
+        QMessageBox::critical(nullptr, "Error", "Failed to connect to pipe: " + QString::number(GetLastError()));
+    }
+
+    return hPipe;
+}
+
 void MainWindow::on_btnSearch_clicked()
 {
     if (ui->txtSearch->text().isEmpty())
@@ -108,40 +130,113 @@ void MainWindow::on_btnSearch_clicked()
         return;
     }
 
-    // Створення сокету та підключення його до серверу
-    SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
-    if (socket == INVALID_SOCKET)
-    {
-        return;
-    }
-
     std::string strSearch = std::string("ser ") + ui->txtSearch->text().toStdString();
 
-    int iResult;
-
-    // Надсилання запиту до сервера
-    iResult = send(socket, strSearch.c_str(), strSearch.length(), 0);
-    if (iResult == SOCKET_ERROR)
+    if (m_strSynchMethod == "Socket")
     {
-        QMessageBox::critical(this, "Error", "send failed: " + QString::number(WSAGetLastError()));
+        // Створення сокету та підключення його до серверу
+        SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
+        if (socket == INVALID_SOCKET)
+        {
+            return;
+        }
+        int iResult;
+
+        // Надсилання запиту до сервера
+        iResult = send(socket, strSearch.c_str(), strSearch.length(), 0);
+        if (iResult == SOCKET_ERROR)
+        {
+            QMessageBox::critical(this, "Error", "send failed: " + QString::number(WSAGetLastError()));
+            closesocket(socket);
+            return;
+        }
+
+        const int RECVBUF_SIZE = 2048;
+        std::vector<char> vecRecvBuf(RECVBUF_SIZE);
+
+        // Приймання відповіді від серверу (послідовність імен користувачів записані через ' ')
+        iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
+        if (iResult > 0)
+        {
+            QString strReceivedData = QString::fromStdString(std::string(vecRecvBuf.data(), iResult));
+            QStringList strLsFoundUsers = strReceivedData.split(' ', Qt::SkipEmptyParts);
+
+            // Видалення зі списку імені користувача, який ініціював пошук
+            strLsFoundUsers.removeAll(m_strUserName);
+
+            if(!strLsFoundUsers.empty())
+            {
+                // Створюємо модель на основі списку знайдених користувачів
+                QStringListModel* model = new QStringListModel(strLsFoundUsers, this);
+
+                // Прив'язуємо модель
+                ui->lsChats->setModel(model);
+            }
+            else
+            {
+                QMessageBox::information(this, "Search", "No users found :(");
+            }
+        }
+        else if (iResult == 0)
+        {
+            QMessageBox::information(this, "Error", "Connection closed");
+        }
+        else
+        {
+            QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
+        }
+
         closesocket(socket);
-        return;
     }
-
-    const int RECVBUF_SIZE = 2048;
-    std::vector<char> vecRecvBuf(RECVBUF_SIZE);
-
-    // Приймання відповіді від серверу (послідовність імен користувачів записані через ' ')
-    iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
-    if (iResult > 0)
+    else if (m_strSynchMethod == "Pipe")
     {
-        QString strReceivedData = QString::fromStdString(std::string(vecRecvBuf.data(), iResult));
+        HANDLE hPipe = connectToPipe();
+        if (hPipe == INVALID_HANDLE_VALUE)
+        {
+            return;
+        }
+
+        DWORD bytesWritten;
+        BOOL bResult = WriteFile(
+            hPipe,                        // Дескриптор каналу
+            strSearch.c_str(),            // Дані для запису
+            strSearch.length(),           // Кількість байтів для запису
+            &bytesWritten,                // Кількість фактично записаних байтів
+            NULL);                        // Немає асинхронного IO
+
+        if (!bResult)
+        {
+            QMessageBox::critical(this, "Error", "Write to pipe failed: " + QString::number(GetLastError()));
+            CloseHandle(hPipe);
+            return;
+        }
+
+        const int RECVBUF_SIZE = 2048;
+        std::vector<char> vecRecvBuf(RECVBUF_SIZE);
+        DWORD bytesRead;
+
+        // Читання відповіді з каналу
+        bResult = ReadFile(
+            hPipe,                        // Дескриптор каналу
+            vecRecvBuf.data(),            // Буфер для отриманих даних
+            RECVBUF_SIZE,                 // Максимальний розмір буфера
+            &bytesRead,                   // Кількість фактично прочитаних байтів
+            NULL);                        // Немає асинхронного IO
+
+        if (!bResult || bytesRead == 0)
+        {
+            QMessageBox::critical(this, "Error", "Read from pipe failed: " + QString::number(GetLastError()));
+            CloseHandle(hPipe);
+            return;
+        }
+
+        QString strReceivedData = QString::fromStdString(std::string(vecRecvBuf.data(), bytesRead));
         QStringList strLsFoundUsers = strReceivedData.split(' ', Qt::SkipEmptyParts);
 
         // Видалення зі списку імені користувача, який ініціював пошук
         strLsFoundUsers.removeAll(m_strUserName);
 
-        if(!strLsFoundUsers.empty())
+        if (!strLsFoundUsers.empty())
         {
             // Створюємо модель на основі списку знайдених користувачів
             QStringListModel* model = new QStringListModel(strLsFoundUsers, this);
@@ -153,17 +248,9 @@ void MainWindow::on_btnSearch_clicked()
         {
             QMessageBox::information(this, "Search", "No users found :(");
         }
-    }
-    else if (iResult == 0)
-    {
-        QMessageBox::information(this, "Error", "Connection closed");
-    }
-    else
-    {
-        QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
-    }
 
-    closesocket(socket);
+        CloseHandle(hPipe);
+    }
 }
 
 void MainWindow::on_btnSend_clicked()

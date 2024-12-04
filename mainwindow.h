@@ -42,5 +42,6 @@ private:
     std::unordered_map<QString, QString> m_mapChats;
 
     SOCKET connectToServer(const std::string& strIp, const std::string& strPort);
+    HANDLE connectToPipe();
 };
 #endif // MAINWINDOW_H

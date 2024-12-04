@@ -19,6 +19,7 @@
 #include <QRegularExpressionValidator>
 
 #define DEFAULT_PORT "12345"
+#define PIPE_NAME L"\\\\.\\pipe\\ServerPipe"
 
 AuthorizationWindow::AuthorizationWindow(MainWindow* pMainWin, QWidget *parent)
     : QDialog(parent)
@@ -196,11 +197,11 @@ void AuthorizationWindow::on_btnSignIn_clicked()
 
         // Змінюємо std::string на std::wstring для роботи з wide character string
         //std::wstring pipeName = L"\\\\.\\pipe\\AuthPipe"; // Ім'я пайпа у wide string форматі
-        std::wstring pipeName = L"\\\\.\\pipe\\ServerPipe";
+        //std::wstring pipeName = L"\\\\.\\pipe\\ServerPipe";
 
         // Відкриття пайпа
         hPipe = CreateFileW(
-            pipeName.c_str(),              // Ім'я пайпа
+            PIPE_NAME,                     // Ім'я пайпа
             GENERIC_READ | GENERIC_WRITE,  // Права доступу
             0,                             // Немає спільного доступу
             NULL,                          // Без атрибутів безпеки
@@ -249,6 +250,9 @@ void AuthorizationWindow::on_btnSignIn_clicked()
                 }
 
                 this->hide();
+
+                m_pMainWin->setSyncMethod("Pipe");
+
                 m_pMainWin->setName(strName);
                 m_pMainWin->show();
             }
