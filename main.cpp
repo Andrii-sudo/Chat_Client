@@ -1,15 +1,18 @@
 #include "mainwindow.h"
 #include "authorizationwindow.h"
+#include "selectionwindow.h"
 
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    MainWindow w;
+    QApplication app(argc, argv);
 
-    AuthorizationWindow aw(&w);
-    aw.show();
+    MainWindow mainWindow;
+    AuthorizationWindow authWindow(&mainWindow);
 
-    return a.exec();
+    SelectionWindow selectionWindow(&authWindow);
+    selectionWindow.show();
+
+    return app.exec();
 }
