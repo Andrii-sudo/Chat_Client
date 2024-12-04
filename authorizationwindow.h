@@ -15,8 +15,10 @@ class AuthorizationWindow : public QDialog
     Q_OBJECT
 
 public:
-    explicit AuthorizationWindow(SelectionWindow* pSelectionWin, QWidget *parent = nullptr);
+    explicit AuthorizationWindow(MainWindow* pMainWin, QWidget *parent = nullptr);
     ~AuthorizationWindow();
+
+    void setSyncMethod(QString strSynchMethod);
 
 private slots:
     void on_btnSignIn_clicked();
@@ -27,8 +29,9 @@ private:
 
     // Змінна, яка визначає, чи хоче користувач авторизуватися, чи зареєструватися
     bool m_bIsLogin;
-    SelectionWindow* m_pMainWin;
-    SelectionWindow* m_pSelectionWin; // Зв'язок із SelectionWindow
+    MainWindow* m_pMainWin;
+
+    QString m_strSynchMethod;
 
     SOCKET connectToServer(const std::string& strIp, const std::string& strPort);
 };

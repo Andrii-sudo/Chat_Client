@@ -20,14 +20,14 @@
 
 #define DEFAULT_PORT "12345"
 
-AuthorizationWindow::AuthorizationWindow(SelectionWindow* pSelectionWin, QWidget *parent)
+AuthorizationWindow::AuthorizationWindow(MainWindow* pMainWin, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::AuthorizationWindow)
-    , m_pSelectionWin(pSelectionWin) // Зв'язок із SelectionWindow
 {
     ui->setupUi(this);
 
-    //m_pMainWin = pMainWin;
+    m_pMainWin = pMainWin;
+
     m_bIsLogin = true;
 
     // Заборона введення пробілів у поля авторизації
@@ -54,6 +54,12 @@ AuthorizationWindow::~AuthorizationWindow()
     delete ui;
     WSACleanup();
 }
+
+void AuthorizationWindow::setSyncMethod(QString strSynchMethod)
+{
+    m_strSynchMethod = strSynchMethod;
+}
+
 
 SOCKET AuthorizationWindow::connectToServer(const std::string& strIp, const std::string& strPort)
 {
@@ -109,75 +115,88 @@ void AuthorizationWindow::on_btnSignIn_clicked()
         return;
     }
 
-    // Створення сокету та підключення його до серверу
-    SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
-    if (socket == INVALID_SOCKET)
+    if (m_strSynchMethod == "Socket")
     {
-        return;
-    }
+        // Створення сокету та підключення його до серверу
+        SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
+        if (socket == INVALID_SOCKET)
+        {
+            return;
+        }
 
-    std::string strName = ui->txtName->text().toStdString();
-    std::string strPassword = ui->txtPassword->text().toStdString();
+        std::string strName = ui->txtName->text().toStdString();
+        std::string strPassword = ui->txtPassword->text().toStdString();
 
 
-    std::string strInfo = std::string((m_bIsLogin) ? "log" : "reg") + " " + strName + " " + strPassword;
+        std::string strInfo = std::string((m_bIsLogin) ? "log" : "reg") + " " + strName + " " + strPassword;
 
-    int iResult;
+        int iResult;
 
-    // Надсилання запиту до сервера
-    iResult = send(socket, strInfo.c_str(), strInfo.length(), 0);
-    if (iResult == SOCKET_ERROR)
-    {
-        QMessageBox::critical(this, "Error", "send failed: " + QString::number(WSAGetLastError()));
+        // Надсилання запиту до сервера
+        iResult = send(socket, strInfo.c_str(), strInfo.length(), 0);
+        if (iResult == SOCKET_ERROR)
+        {
+            QMessageBox::critical(this, "Error", "send failed: " + QString::number(WSAGetLastError()));
+            closesocket(socket);
+            return;
+        }
+
+        const int RECVBUF_SIZE = 1;
+        std::vector<char> vecRecvBuf(RECVBUF_SIZE);
+        // Приймання відповіді від серверу ("Y" або "N")
+        iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
+        if (iResult > 0)
+        {
+            if(vecRecvBuf[0] == 'Y')
+            {
+                if(m_bIsLogin)
+                {
+                    QMessageBox::information(this, "Success", "Login successful!");
+                }
+                else
+                {
+                    QMessageBox::information(this, "Success", "Account created successfully!");
+                }
+
+
+                this->hide();
+
+
+
+                // Потрібно сказати головному вікну, що синхронізація на СОКЕТАХ!!!
+
+
+
+                m_pMainWin->setName(strName);
+                m_pMainWin->show();
+            }
+            else if(vecRecvBuf[0] == 'N')
+            {
+                if(m_bIsLogin)
+                {
+                    QMessageBox::information(this, "Error", "Incorrect username or password");
+                }
+                else
+                {
+                    QMessageBox::information(this, "Error", "User with this name already exists");
+                }
+            }
+        }
+        else if (iResult == 0)
+        {
+            QMessageBox::information(this, "Error", "Connection closed");
+        }
+        else
+        {
+            QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
+        }
+
         closesocket(socket);
-        return;
     }
-
-    const int RECVBUF_SIZE = 1;
-    std::vector<char> vecRecvBuf(RECVBUF_SIZE);
-    // Приймання відповіді від серверу ("Y" або "N")
-    iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
-    if (iResult > 0)
+    else if (m_strSynchMethod == "Pipe")
     {
-        if(vecRecvBuf[0] == 'Y')
-        {
-            if(m_bIsLogin)
-            {
-                QMessageBox::information(this, "Success", "Login successful!");
-            }
-            else
-            {
-                QMessageBox::information(this, "Success", "Account created successfully!");
-            }
-
-
-            this->hide();
-
-           // m_pMainWin->setName(strName);
-            m_pMainWin->show();
-        }
-        else if(vecRecvBuf[0] == 'N')
-        {
-            if(m_bIsLogin)
-            {
-                QMessageBox::information(this, "Error", "Incorrect username or password");
-            }
-            else
-            {
-                QMessageBox::information(this, "Error", "User with this name already exists");
-            }
-        }
+        // Функціонал через пайпи
     }
-    else if (iResult == 0)
-    {
-        QMessageBox::information(this, "Error", "Connection closed");
-    }
-    else
-    {
-        QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
-    }
-
-    closesocket(socket);
 }
 
 void AuthorizationWindow::on_btnSignUp_clicked()

@@ -10,21 +10,23 @@ class SelectionWindow; // Декларація класу Ui::SelectionWindow
 }
 QT_END_NAMESPACE
 
-class SelectionWindow : public QWidget {
+class SelectionWindow : public QDialog
+{
     Q_OBJECT
 
 public:
-    explicit SelectionWindow(QWidget *parent = nullptr);
+    explicit SelectionWindow(AuthorizationWindow* pAuthWin, QWidget *parent = nullptr);
     ~SelectionWindow();
 
 private slots:
-    void onPushBtnSocketClicked();
-    void onPushBtnPipeClicked();
+    void on_pushBtnSocket_clicked();
+    void on_pushBtnPipe_clicked();
 
 private:
     Ui::SelectionWindow *ui;
-    AuthorizationWindow *authWindow;  // Вказівник на вікно авторизації
-    QString commMethod;               // Змінна для методу зв'язку
+    AuthorizationWindow *m_pAuthWin;   // Вказівник на вікно авторизації
+
+    QString strSyncMethod;             // Змінна для методу зв'язку
 };
 
 #endif // SELECTIONWINDOW_H

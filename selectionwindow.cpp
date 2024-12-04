@@ -3,36 +3,33 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-SelectionWindow::SelectionWindow(QWidget *parent)
-    : QWidget(parent),
-    ui(new Ui::SelectionWindow), // Ініціалізація інтерфейсу
-    authWindow(nullptr),
-    commMethod("")
+SelectionWindow::SelectionWindow(AuthorizationWindow* pAuthWin, QWidget *parent)
+    : QDialog(parent),
+    ui(new Ui::SelectionWindow)
 {
     ui->setupUi(this);
 
+    m_pAuthWin = pAuthWin; // Зв'язок з вікном авторизації
 }
 
-SelectionWindow::~SelectionWindow() {
-    delete authWindow;  // Звільнення пам'яті
+SelectionWindow::~SelectionWindow()
+{
+    delete ui;
 }
 
-void SelectionWindow::onPushBtnSocketClicked() {
-    //commMethod = "Socket";  // Встановлення методу зв'язку
-    if (!authWindow) {
-        authWindow = new AuthorizationWindow(this);  // Створення вікна, якщо його ще немає
-    }
-    //authWindow->setCommMethod(commMethod);  // Передача методу зв'язку
-    authWindow->show();
-    this->hide();  // Приховування поточного вікна
+void SelectionWindow::on_pushBtnSocket_clicked()
+{
+    m_pAuthWin->setSyncMethod("Socket");
+
+    m_pAuthWin->show();
+    this->hide();
 }
 
-void SelectionWindow::onPushBtnPipeClicked() {
-    //commMethod = "Pipe";  // Встановлення методу зв'язку
-    if (!authWindow) {
-        authWindow = new AuthorizationWindow(this);  // Створення вікна, якщо його ще немає
-    }
-    //authWindow->setCommMethod(commMethod);  // Передача методу зв'язку
-    authWindow->show();
-    this->hide();  // Приховування поточного вікна
+void SelectionWindow::on_pushBtnPipe_clicked()
+{
+    m_pAuthWin->setSyncMethod("Pipe");
+
+    m_pAuthWin->show();
+    this->hide();
 }
+
