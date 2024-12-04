@@ -1,5 +1,6 @@
 #include "authorizationwindow.h"
 #include "ui_authorizationwindow.h"
+#include "selectionwindow.h"
 
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -18,6 +19,7 @@
 #include <QRegularExpressionValidator>
 
 #define DEFAULT_PORT "12345"
+#define PIPE_NAME L"\\\\.\\pipe\\ServerPipe"
 
 AuthorizationWindow::AuthorizationWindow(MainWindow* pMainWin, QWidget *parent)
     : QDialog(parent)
@@ -40,7 +42,7 @@ AuthorizationWindow::AuthorizationWindow(MainWindow* pMainWin, QWidget *parent)
     WSADATA wsaData;
 
     // Ініціалізація Winsock
-    int	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    int  iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0)
     {
         QMessageBox::critical(this, "Error", "WSAStartup failed: " + QString::number(iResult));
@@ -54,6 +56,12 @@ AuthorizationWindow::~AuthorizationWindow()
     WSACleanup();
 }
 
+void AuthorizationWindow::setSyncMethod(QString strSynchMethod)
+{
+    m_strSynchMethod = strSynchMethod;
+}
+
+
 SOCKET AuthorizationWindow::connectToServer(const std::string& strIp, const std::string& strPort)
 {
     struct addrinfo* result = NULL,
@@ -66,7 +74,7 @@ SOCKET AuthorizationWindow::connectToServer(const std::string& strIp, const std:
     hints.ai_protocol = IPPROTO_TCP; // Протокол: TCP
 
     // Визначення локальної адреси і порту для з'єднанням з сервером
-    int	iResult = getaddrinfo(strIp.c_str(), strPort.c_str(), &hints, &result);
+    int  iResult = getaddrinfo(strIp.c_str(), strPort.c_str(), &hints, &result);
     if (iResult != 0)
     {
         QMessageBox::critical(this, "Error", "getaddrinfo failed: " + QString::number(iResult));
@@ -108,76 +116,167 @@ void AuthorizationWindow::on_btnSignIn_clicked()
         return;
     }
 
-    // Створення сокету та підключення його до серверу
-    SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
-    if (socket == INVALID_SOCKET)
+    if (m_strSynchMethod == "Socket")
     {
-        return;
-    }
+        // Створення сокету та підключення його до серверу
+        SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
+        if (socket == INVALID_SOCKET)
+        {
+            return;
+        }
 
-    std::string strName = ui->txtName->text().toStdString();
-    std::string strPassword = ui->txtPassword->text().toStdString();
+        std::string strName = ui->txtName->text().toStdString();
+        std::string strPassword = ui->txtPassword->text().toStdString();
 
 
-    std::string strInfo = std::string((m_bIsLogin) ? "log" : "reg") + " " + strName + " " + strPassword;
+        std::string strInfo = std::string((m_bIsLogin) ? "log" : "reg") + " " + strName + " " + strPassword;
 
-    int iResult;
+        int iResult;
 
-    // Надсилання запиту до сервера
-    iResult = send(socket, strInfo.c_str(), strInfo.length(), 0);
-    if (iResult == SOCKET_ERROR)
-    {
-        QMessageBox::critical(this, "Error", "send failed: " + QString::number(WSAGetLastError()));
+        // Надсилання запиту до сервера
+        iResult = send(socket, strInfo.c_str(), strInfo.length(), 0);
+        if (iResult == SOCKET_ERROR)
+        {
+            QMessageBox::critical(this, "Error", "send failed: " + QString::number(WSAGetLastError()));
+            closesocket(socket);
+            return;
+        }
+
+        const int RECVBUF_SIZE = 1;
+        std::vector<char> vecRecvBuf(RECVBUF_SIZE);
+        // Приймання відповіді від серверу ("Y" або "N")
+        iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
+        if (iResult > 0)
+        {
+            if(vecRecvBuf[0] == 'Y')
+            {
+                if(m_bIsLogin)
+                {
+                    QMessageBox::information(this, "Success", "Login successful!");
+                }
+                else
+                {
+                    QMessageBox::information(this, "Success", "Account created successfully!");
+                }
+
+
+                this->hide();
+
+                m_pMainWin->setSyncMethod("Socket");
+
+                m_pMainWin->setName(strName);
+                m_pMainWin->show();
+            }
+            else if(vecRecvBuf[0] == 'N')
+            {
+                if(m_bIsLogin)
+                {
+                    QMessageBox::information(this, "Error", "Incorrect username or password");
+                }
+                else
+                {
+                    QMessageBox::information(this, "Error", "User with this name already exists");
+                }
+            }
+        }
+        else if (iResult == 0)
+        {
+            QMessageBox::information(this, "Error", "Connection closed");
+        }
+        else
+        {
+            QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
+        }
+
         closesocket(socket);
-        return;
     }
-
-    const int RECVBUF_SIZE = 1;
-    std::vector<char> vecRecvBuf(RECVBUF_SIZE);
-
-    // Приймання відповіді від серверу ("Y" або "N")
-    iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
-    if (iResult > 0)
+    else if (m_strSynchMethod == "Pipe")
     {
-        if(vecRecvBuf[0] == 'Y')
+        // Функціонал через пайпи
+        HANDLE hPipe;
+
+        // Змінюємо std::string на std::wstring для роботи з wide character string
+        //std::wstring pipeName = L"\\\\.\\pipe\\AuthPipe"; // Ім'я пайпа у wide string форматі
+        //std::wstring pipeName = L"\\\\.\\pipe\\ServerPipe";
+
+        // Відкриття пайпа
+        hPipe = CreateFileW(
+            PIPE_NAME,                     // Ім'я пайпа
+            GENERIC_READ | GENERIC_WRITE,  // Права доступу
+            0,                             // Немає спільного доступу
+            NULL,                          // Без атрибутів безпеки
+            OPEN_EXISTING,                 // Відкриваємо існуючий пайп
+            0,                             // Додаткові атрибути
+            NULL);                         // Без шаблону
+
+        if (hPipe == INVALID_HANDLE_VALUE)
         {
-            if(m_bIsLogin)
-            {
-                QMessageBox::information(this, "Success", "Login successful!");
-            }
-            else
-            {
-                QMessageBox::information(this, "Success", "Account created successfully!");
-            }
-
-
-            this->hide();
-
-            m_pMainWin->setName(strName);
-            m_pMainWin->show();
+            QMessageBox::critical(this, "Error", "Failed to connect to pipe.");
+            return;
         }
-        else if(vecRecvBuf[0] == 'N')
+
+        std::string strName = ui->txtName->text().toStdString();
+        std::string strPassword = ui->txtPassword->text().toStdString();
+        std::string strInfo = std::string((m_bIsLogin) ? "log" : "reg") + " " + strName + " " + strPassword;
+
+        DWORD bytesWritten;
+        BOOL result;
+
+        // Надсилання інформації через пайп
+        result = WriteFile(hPipe, strInfo.c_str(), strInfo.length(), &bytesWritten, NULL);
+        if (!result || bytesWritten == 0)
         {
-            if(m_bIsLogin)
+            QMessageBox::critical(this, "Error", "Failed to send data to the pipe.");
+            CloseHandle(hPipe);
+            return;
+        }
+
+        char buffer[2];  // Буфер для отримання відповіді
+        DWORD bytesRead;
+
+        // Отримання відповіді від сервера
+        result = ReadFile(hPipe, buffer, sizeof(buffer), &bytesRead, NULL);
+        if (result && bytesRead > 0)
+        {
+            if (buffer[0] == 'Y')
             {
-                QMessageBox::information(this, "Error", "Incorrect username or password");
+                if (m_bIsLogin)
+                {
+                    QMessageBox::information(this, "Success", "Login successful!");
+                }
+                else
+                {
+                    QMessageBox::information(this, "Success", "Account created successfully!");
+                }
+
+                this->hide();
+
+                m_pMainWin->setSyncMethod("Pipe");
+
+                m_pMainWin->setName(strName);
+                m_pMainWin->show();
             }
-            else
+            else if (buffer[0] == 'N')
             {
-                QMessageBox::information(this, "Error", "User with this name already exists");
+                if (m_bIsLogin)
+                {
+                    QMessageBox::information(this, "Error", "Incorrect username or password");
+                }
+                else
+                {
+                    QMessageBox::information(this, "Error", "User with this name already exists");
+                }
             }
         }
-    }
-    else if (iResult == 0)
-    {
-        QMessageBox::information(this, "Error", "Connection closed");
-    }
-    else
-    {
-        QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
+        else
+        {
+            QMessageBox::critical(this, "Error", "Failed to receive data from the pipe.");
+        }
+
+        // Закриття пайпа
+        CloseHandle(hPipe);
     }
 
-    closesocket(socket);
 }
 
 void AuthorizationWindow::on_btnSignUp_clicked()
