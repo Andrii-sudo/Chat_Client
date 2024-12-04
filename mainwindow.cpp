@@ -260,48 +260,107 @@ void MainWindow::on_btnSend_clicked()
         return;
     }
 
-    // Створення сокету та підключення його до серверу
-    SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
-    if (socket == INVALID_SOCKET)
-    {
-        return;
-    }
-
     std::string strMessage = std::string("mes ") + m_strUserName.toStdString() + " " +  m_strSelectedName.toStdString()
-                                                 + " " + ui->txtMessage->text().toStdString();
+                             + " " + ui->txtMessage->text().toStdString();
 
-    ui->txtMessage->clear();
-
-    int iResult;
-
-    // Надсилання запиту до сервера
-    iResult = send(socket, strMessage.c_str(), strMessage.length(), 0);
-    if (iResult == SOCKET_ERROR)
+    if (m_strSynchMethod == "Socket")
     {
-        QMessageBox::critical(this, "Error", "send failed: " + QString::number(WSAGetLastError()));
+        // Створення сокету та підключення його до серверу
+        SOCKET socket = connectToServer("127.0.0.1", DEFAULT_PORT);
+        if (socket == INVALID_SOCKET)
+        {
+            return;
+        }
+
+        ui->txtMessage->clear();
+
+        int iResult;
+
+        // Надсилання запиту до сервера
+        iResult = send(socket, strMessage.c_str(), strMessage.length(), 0);
+        if (iResult == SOCKET_ERROR)
+        {
+            QMessageBox::critical(this, "Error", "send failed: " + QString::number(WSAGetLastError()));
+            closesocket(socket);
+            return;
+        }
+
+        const int RECVBUF_SIZE = 1;
+        std::vector<char> vecRecvBuf(RECVBUF_SIZE);
+
+        // Приймання відповіді від серверу (Завжди "Y")
+        iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
+        if (iResult > 0)
+        {
+            // Завжди приймаємо Y
+        }
+        else if (iResult == 0)
+        {
+            QMessageBox::information(this, "Error", "Connection closed");
+        }
+        else
+        {
+            QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
+        }
+
         closesocket(socket);
-        return;
     }
-
-    const int RECVBUF_SIZE = 1;
-    std::vector<char> vecRecvBuf(RECVBUF_SIZE);
-
-    // Приймання відповіді від серверу (Завжди "Y")
-    iResult = recv(socket, vecRecvBuf.data(), vecRecvBuf.size(), 0);
-    if (iResult > 0)
+    else if (m_strSynchMethod == "Pipe")
     {
-        // Завжди приймаємо Y
-    }
-    else if (iResult == 0)
-    {
-        QMessageBox::information(this, "Error", "Connection closed");
-    }
-    else
-    {
-        QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
-    }
+        HANDLE hPipe = connectToPipe();
+        if (hPipe == INVALID_HANDLE_VALUE)
+        {
+            return;
+        }
 
-    closesocket(socket);
+        ui->txtMessage->clear();
+
+        DWORD bytesWritten;
+        BOOL bResult = WriteFile(
+            hPipe,                        // Дескриптор каналу
+            strMessage.c_str(),           // Дані для запису
+            strMessage.length(),          // Кількість байтів для запису
+            &bytesWritten,                // Кількість фактично записаних байтів
+            NULL);                        // Немає асинхронного IO
+
+        if (!bResult)
+        {
+            QMessageBox::critical(this, "Error", "Write to pipe failed: " + QString::number(GetLastError()));
+            CloseHandle(hPipe);
+            return;
+        }
+
+        const int RECVBUF_SIZE = 1; // Очікуємо одну літеру ("Y")
+        std::vector<char> vecRecvBuf(RECVBUF_SIZE);
+        DWORD bytesRead;
+
+        // Читання відповіді з каналу
+        bResult = ReadFile(
+            hPipe,                        // Дескриптор каналу
+            vecRecvBuf.data(),            // Буфер для отриманих даних
+            RECVBUF_SIZE,                 // Максимальний розмір буфера
+            &bytesRead,                   // Кількість фактично прочитаних байтів
+            NULL);                        // Немає асинхронного IO
+
+        if (!bResult || bytesRead == 0)
+        {
+            QMessageBox::critical(this, "Error", "Read from pipe failed: " + QString::number(GetLastError()));
+            CloseHandle(hPipe);
+            return;
+        }
+
+        // Обробка відповіді (очікуємо "Y")
+        if (vecRecvBuf[0] == 'Y')
+        {
+            // Успішно відправлено
+        }
+        else
+        {
+            QMessageBox::information(this, "Error", "Unexpected response from server");
+        }
+
+        CloseHandle(hPipe);
+    }
 }
 
 void MainWindow::on_lsChats_clicked(const QModelIndex &index)
