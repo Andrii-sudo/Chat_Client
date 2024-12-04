@@ -224,6 +224,9 @@ QPlainTextEdit::plainTextDocument {
     padding: 5px;                   /* Відступи всередині текстового поля */
 }</string>
           </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -260,6 +263,9 @@ QLineEdit:focus {
               <width>38</width>
               <height>29</height>
              </size>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="styleSheet">
              <string notr="true">

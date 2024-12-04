@@ -4,6 +4,8 @@
 #include <QDialog>
 #include "mainwindow.h"
 
+class SelectionWindow; // Декларація класу SelectionWindow
+
 namespace Ui {
 class AuthorizationWindow;
 }

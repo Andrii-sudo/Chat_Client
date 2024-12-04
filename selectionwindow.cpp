@@ -25,7 +25,6 @@ void SelectionWindow::on_pushBtnSocket_clicked()
     this->hide();
 }
 
-
 void SelectionWindow::on_pushBtnPipe_clicked()
 {
     m_pAuthWin->setSyncMethod("Pipe");

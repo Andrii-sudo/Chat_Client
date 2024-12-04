@@ -187,7 +187,7 @@ void AuthorizationWindow::on_btnSignIn_clicked()
         {
             QMessageBox::information(this, "Error", "recv failed: " + QString::number(WSAGetLastError()));
         }
-
+      
         closesocket(socket);
     }
     else if (m_strSynchMethod == "Pipe")
@@ -276,7 +276,6 @@ void AuthorizationWindow::on_btnSignIn_clicked()
         // Закриття пайпа
         CloseHandle(hPipe);
     }
-
 }
 
 void AuthorizationWindow::on_btnSignUp_clicked()
@@ -298,4 +297,3 @@ void AuthorizationWindow::on_btnSignUp_clicked()
         ui->btnSignUp->setText("Sign up");
     }
 }
-
