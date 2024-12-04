@@ -24,12 +24,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Client
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        selectionwindow.ui
-        selectionwindow.h
-        selectionwindow.cpp
-        authorizationwindow.h
-        authorizationwindow.cpp
-        authorizationwindow.ui
+        authorizationwindow.h authorizationwindow.cpp authorizationwindow.ui
+        selectionwindow.h selectionwindow.cpp selectionwindow.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Client APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

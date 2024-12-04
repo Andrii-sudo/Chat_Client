@@ -32,4 +32,3 @@ void SelectionWindow::on_pushBtnPipe_clicked()
     m_pAuthWin->show();
     this->hide();
 }
-
