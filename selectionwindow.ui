@@ -72,15 +72,19 @@
           </property>
           <property name="font">
            <font>
-            <pointsize>12</pointsize>
+            <pointsize>-1</pointsize>
             <bold>true</bold>
            </font>
           </property>
           <property name="styleSheet">
-           <string notr="true">QLabel {
+           <string notr="true">QLabel 
+{
+    font-size: 20px;
     font-weight: bold;
-    border-radius: 5px;
-    padding: 10px;
+    color: #005a52;
+    text-align: center;
+ 	background: transparent;
+    border: none;
 }</string>
           </property>
           <property name="text">
@@ -109,6 +113,9 @@
               <pointsize>-1</pointsize>
               <bold>true</bold>
              </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="styleSheet">
              <string notr="true">QPushButton {
@@ -148,6 +155,9 @@ QPushButton:hover {
               <bold>true</bold>
               <stylestrategy>PreferAntialias</stylestrategy>
              </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="styleSheet">
              <string notr="true">QPushButton {
