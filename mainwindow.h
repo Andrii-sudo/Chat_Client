@@ -20,6 +20,7 @@ public:
     ~MainWindow();
 
     void setName(std::string strName);
+    void setSyncMethod(QString strSynchMethod);
 
 private slots:
     void on_btnSearch_clicked();
@@ -35,6 +36,7 @@ private:
 
     QString m_strUserName;
     QString m_strSelectedName;
+    QString m_strSynchMethod;
 
     std::vector<QString> m_vecChats;
     std::unordered_map<QString, QString> m_mapChats;

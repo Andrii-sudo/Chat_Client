@@ -39,6 +39,11 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::setSyncMethod(QString strSynchMethod)
+{
+    m_strSynchMethod = strSynchMethod;
+}
+
 void MainWindow::setName(std::string strName)
 {
     m_strUserName = QString::fromStdString(strName);

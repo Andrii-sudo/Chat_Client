@@ -161,11 +161,7 @@ void AuthorizationWindow::on_btnSignIn_clicked()
 
                 this->hide();
 
-
-
-                // Потрібно сказати головному вікну, що синхронізація на СОКЕТАХ!!!
-
-
+                m_pMainWin->setSyncMethod("Socket");
 
                 m_pMainWin->setName(strName);
                 m_pMainWin->show();
@@ -196,7 +192,87 @@ void AuthorizationWindow::on_btnSignIn_clicked()
     else if (m_strSynchMethod == "Pipe")
     {
         // Функціонал через пайпи
+        HANDLE hPipe;
+
+        // Змінюємо std::string на std::wstring для роботи з wide character string
+        //std::wstring pipeName = L"\\\\.\\pipe\\AuthPipe"; // Ім'я пайпа у wide string форматі
+        std::wstring pipeName = L"\\\\.\\pipe\\ServerPipe";
+
+        // Відкриття пайпа
+        hPipe = CreateFileW(
+            pipeName.c_str(),              // Ім'я пайпа
+            GENERIC_READ | GENERIC_WRITE,  // Права доступу
+            0,                             // Немає спільного доступу
+            NULL,                          // Без атрибутів безпеки
+            OPEN_EXISTING,                 // Відкриваємо існуючий пайп
+            0,                             // Додаткові атрибути
+            NULL);                         // Без шаблону
+
+        if (hPipe == INVALID_HANDLE_VALUE)
+        {
+            QMessageBox::critical(this, "Error", "Failed to connect to pipe.");
+            return;
+        }
+
+        std::string strName = ui->txtName->text().toStdString();
+        std::string strPassword = ui->txtPassword->text().toStdString();
+        std::string strInfo = std::string((m_bIsLogin) ? "log" : "reg") + " " + strName + " " + strPassword;
+
+        DWORD bytesWritten;
+        BOOL result;
+
+        // Надсилання інформації через пайп
+        result = WriteFile(hPipe, strInfo.c_str(), strInfo.length(), &bytesWritten, NULL);
+        if (!result || bytesWritten == 0)
+        {
+            QMessageBox::critical(this, "Error", "Failed to send data to the pipe.");
+            CloseHandle(hPipe);
+            return;
+        }
+
+        char buffer[2];  // Буфер для отримання відповіді
+        DWORD bytesRead;
+
+        // Отримання відповіді від сервера
+        result = ReadFile(hPipe, buffer, sizeof(buffer), &bytesRead, NULL);
+        if (result && bytesRead > 0)
+        {
+            if (buffer[0] == 'Y')
+            {
+                if (m_bIsLogin)
+                {
+                    QMessageBox::information(this, "Success", "Login successful!");
+                }
+                else
+                {
+                    QMessageBox::information(this, "Success", "Account created successfully!");
+                }
+
+                this->hide();
+                m_pMainWin->setName(strName);
+                m_pMainWin->show();
+            }
+            else if (buffer[0] == 'N')
+            {
+                if (m_bIsLogin)
+                {
+                    QMessageBox::information(this, "Error", "Incorrect username or password");
+                }
+                else
+                {
+                    QMessageBox::information(this, "Error", "User with this name already exists");
+                }
+            }
+        }
+        else
+        {
+            QMessageBox::critical(this, "Error", "Failed to receive data from the pipe.");
+        }
+
+        // Закриття пайпа
+        CloseHandle(hPipe);
     }
+
 }
 
 void AuthorizationWindow::on_btnSignUp_clicked()
